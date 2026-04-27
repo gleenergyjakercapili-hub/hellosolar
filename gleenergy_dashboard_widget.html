@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gleenergy Solar ERP Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & Root ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #090C14;
+  --bg2:      #0D1120;
+  --bg3:      #121828;
+  --surface:  #161D2F;
+  --surface2: #1C2438;
+  --border:   #ffffff0D;
+  --border2:  #ffffff18;
+
+  --gold:     #F5A623;
+  --gold2:    #FFD166;
+  --goldD:    #C47D0E;
+  --goldGlow: #F5A62340;
+
+  --green:    #22D3A0;
+  --greenD:   #0F7A5C;
+  --greenGlow:#22D3A020;
+
+  --blue:     #4E9FFF;
+  --blueD:    #1B4F8A;
+  --blueGlow: #4E9FFF20;
+
+  --red:      #FF5C7A;
+  --redD:     #8B1A2E;
+  --redGlow:  #FF5C7A20;
+
+  --purple:   #B48EFF;
+  --purpD:    #5A2D9E;
+  --purpGlow: #B48EFF20;
+
+  --teal:     #38D9D9;
+  --tealGlow: #38D9D920;
+
+  --text1:    #F0F4FF;
+  --text2:    #8B97B8;
+  --text3:    #4A5568;
+
+  --font-display: 'Syne', sans-serif;
+  --font-body:    'Outfit', sans-serif;
+  --font-mono:    'DM Mono', monospace;
+
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-xl: 22px;
+  --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text1);
+  font-family: var(--font-body);
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── Noise texture overlay ────────────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Ambient glow orbs ────────────────────────────────────────── */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+.orb-1 { width: 500px; height: 500px; background: #F5A62308; top: -200px; right: -100px; animation-delay: 0s; }
+.orb-2 { width: 400px; height: 400px; background: #4E9FFF06; bottom: -150px; left: -100px; animation-delay: 3s; }
+.orb-3 { width: 300px; height: 300px; background: #22D3A006; top: 40%; left: 40%; animation-delay: 6s; }
+@keyframes orbFloat {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+}
+
+/* ── Layout ───────────────────────────────────────────────────── */
+.dashboard { position: relative; z-index: 1; padding: 20px; max-width: 1400px; margin: 0 auto; }
+
+/* ── Header Banner ────────────────────────────────────────────── */
+.header {
+  background: linear-gradient(135deg, #0D1928 0%, #111E35 50%, #0D1928 100%);
+  border: 1px solid var(--border2);
+  border-radius: var(--r-xl);
+  padding: 22px 28px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  opacity: 0.6;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 180px; height: 180px;
+  background: radial-gradient(circle, var(--goldGlow), transparent 70%);
+  pointer-events: none;
+}
+.header-left { display: flex; align-items: center; gap: 16px; }
+.logo {
+  width: 48px; height: 48px;
+  background: linear-gradient(135deg, var(--gold), var(--goldD));
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 0 24px var(--goldGlow), inset 0 1px 0 #ffffff30;
+  position: relative;
+}
+.logo::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--goldGlow), transparent);
+  z-index: -1;
+}
+.brand-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text1);
+  letter-spacing: -0.3px;
+}
+.brand-sub {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 1px;
+  font-weight: 300;
+}
+.header-right { text-align: right; }
+.live-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: #22D3A012;
+  border: 1px solid #22D3A030;
+  border-radius: 99px;
+  padding: 3px 10px;
+  font-size: 10px;
+  color: var(--green);
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.pulse {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--green);
+  animation: pulseAnim 2s ease-in-out infinite;
+}
+@keyframes pulseAnim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+.date-display { font-family: var(--font-mono); font-size: 11px; color: var(--text2); }
+.date-highlight { color: var(--gold); font-weight: 500; }
+
+/* ── Clock section ────────────────────────────────────────────── */
+.clock-strip {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 14px 24px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  overflow: hidden;
+}
+.clock-strip::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--gold), transparent);
+}
+.clock-time {
+  font-family: var(--font-mono);
+  font-size: 32px;
+  font-weight: 500;
+  color: var(--gold);
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 30px var(--goldGlow);
+}
+.clock-meta { text-align: right; }
+.clock-greeting {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text1);
+  font-family: var(--font-display);
+}
+.clock-day { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.clock-manila { font-size: 10px; color: var(--text3); margin-top: 1px; font-family: var(--font-mono); }
+
+/* ── Navigation Pills ─────────────────────────────────────────── */
+.nav-pills {
+  display: flex; gap: 6px; flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+.nav-pill {
+  padding: 8px 18px;
+  border-radius: 99px;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--font-body);
+}
+.nav-pill:hover { background: var(--surface2); color: var(--text1); border-color: var(--border2); transform: translateY(-1px); }
+.nav-pill.active { background: var(--goldGlow); border-color: var(--gold); color: var(--gold); }
+.nav-pill-icon { font-size: 13px; }
+
+/* ── KPI Grid ─────────────────────────────────────────────────── */
+.kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.kpi-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px; right: -20px;
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  opacity: 0.15;
+  transition: var(--transition);
+}
+.kpi-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.kpi-card:hover::after { opacity: 0.3; transform: scale(1.2); }
+
+.kpi-card.green::before { background: linear-gradient(90deg, var(--green), transparent); }
+.kpi-card.green::after  { background: var(--green); }
+.kpi-card.blue::before  { background: linear-gradient(90deg, var(--blue), transparent); }
+.kpi-card.blue::after   { background: var(--blue); }
+.kpi-card.gold::before  { background: linear-gradient(90deg, var(--gold), transparent); }
+.kpi-card.gold::after   { background: var(--gold); }
+.kpi-card.red::before   { background: linear-gradient(90deg, var(--red), transparent); }
+.kpi-card.red::after    { background: var(--red); }
+.kpi-card.purple::before{ background: linear-gradient(90deg, var(--purple), transparent); }
+.kpi-card.purple::after { background: var(--purple); }
+.kpi-card.teal::before  { background: linear-gradient(90deg, var(--teal), transparent); }
+.kpi-card.teal::after   { background: var(--teal); }
+
+.kpi-icon-wrap {
+  width: 34px; height: 34px;
+  border-radius: var(--r-sm);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  margin-bottom: 12px;
+}
+.green .kpi-icon-wrap { background: var(--greenGlow); }
+.blue  .kpi-icon-wrap { background: var(--blueGlow); }
+.gold  .kpi-icon-wrap { background: var(--goldGlow); }
+.red   .kpi-icon-wrap { background: var(--redGlow); }
+.purple.kpi-icon-wrap { background: var(--purpGlow); }
+.purple .kpi-icon-wrap{ background: var(--purpGlow); }
+.teal  .kpi-icon-wrap { background: var(--tealGlow); }
+
+.kpi-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+  margin-bottom: 6px;
+}
+.kpi-value {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+.kpi-card.green .kpi-value { color: var(--green); text-shadow: 0 0 20px var(--greenGlow); }
+.kpi-card.blue  .kpi-value { color: var(--blue);  text-shadow: 0 0 20px var(--blueGlow); }
+.kpi-card.gold  .kpi-value { color: var(--gold);  text-shadow: 0 0 20px var(--goldGlow); }
+.kpi-card.red   .kpi-value { color: var(--red);   text-shadow: 0 0 20px var(--redGlow); }
+.kpi-card.purple.kpi-value { color: var(--purple);}
+.kpi-card.purple .kpi-value{ color: var(--purple); text-shadow: 0 0 20px var(--purpGlow); }
+.kpi-card.teal  .kpi-value { color: var(--teal);  text-shadow: 0 0 20px var(--tealGlow); }
+
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 400;
+}
+.kpi-sub.up   { color: var(--green); }
+.kpi-sub.down { color: var(--red); }
+.kpi-sub.warn { color: var(--gold); }
+
+/* ── Two-column layout ────────────────────────────────────────── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+/* ── Section card ─────────────────────────────────────────────── */
+.section-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+.section-hdr {
+  padding: 13px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+}
+.section-hdr-left { display: flex; align-items: center; gap: 8px; }
+.section-hdr-icon { font-size: 15px; }
+.section-hdr-title {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text1);
+}
+.section-hdr-badge {
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+.section-body { padding: 16px 18px; }
+
+/* ── Pipeline Kanban ──────────────────────────────────────────── */
+.pipeline { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.pipe-col { background: var(--bg3); border-radius: var(--r-md); padding: 10px; }
+.pipe-hdr {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+}
+.pipe-count {
+  font-size: 10px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-weight: 600;
+}
+.pipe-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 9px 10px;
+  margin-bottom: 6px;
+  transition: var(--transition);
+  cursor: pointer;
+}
+.pipe-card:hover { border-color: var(--border2); transform: translateY(-1px); }
+.pipe-card:last-child { margin-bottom: 0; }
+.pipe-card-name { font-size: 11px; font-weight: 500; color: var(--text1); margin-bottom: 2px; }
+.pipe-card-meta { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+.pipe-card-val { font-size: 10px; font-weight: 600; color: var(--gold); font-family: var(--font-mono); }
+
+/* ── Project Progress ─────────────────────────────────────────── */
+.project-row {
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+.project-row:last-child { border-bottom: none; padding-bottom: 0; }
+.project-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.project-name { font-size: 12px; font-weight: 600; color: var(--text1); }
+.project-value { font-size: 11px; font-weight: 600; color: var(--gold); font-family: var(--font-mono); }
+.project-meta { font-size: 10px; color: var(--text3); margin-bottom: 8px; }
+.progress-bar { height: 4px; background: var(--bg); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+.progress-fill { height: 100%; border-radius: 99px; position: relative; overflow: hidden; }
+.progress-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, #ffffff30, transparent); animation: shimmer 2s infinite; }
+@keyframes shimmer { 0%{transform:translateX(-100%)} 100%{transform:translateX(100%)} }
+.progress-pct { font-size: 10px; color: var(--text3); font-family: var(--font-mono); }
+.status-badge {
+  font-size: 10px; padding: 2px 8px; border-radius: 99px; font-weight: 500;
+}
+
+/* ── Alert items ──────────────────────────────────────────────── */
+.alert-list { display: flex; flex-direction: column; gap: 6px; }
+.alert-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  font-size: 11px;
+  transition: var(--transition);
+}
+.alert-item:hover { transform: translateX(2px); }
+.alert-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.alert-item.danger { background: #FF5C7A08; border-color: #FF5C7A20; }
+.alert-item.danger .alert-dot { background: var(--red); box-shadow: 0 0 6px var(--red); }
+.alert-item.warn { background: #F5A62308; border-color: #F5A62320; }
+.alert-item.warn .alert-dot { background: var(--gold); box-shadow: 0 0 6px var(--gold); }
+.alert-item.ok { background: #22D3A008; border-color: #22D3A020; }
+.alert-item.ok .alert-dot { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.alert-text { color: var(--text2); flex: 1; }
+.alert-badge { font-size: 9px; padding: 2px 7px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+
+/* ── Schedule ─────────────────────────────────────────────────── */
+.sched-list { display: flex; flex-direction: column; gap: 0; }
+.sched-item {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.sched-item:last-child { border-bottom: none; padding-bottom: 0; }
+.sched-dot-col { display: flex; flex-direction: column; align-items: center; gap: 0; padding-top: 4px; }
+.sched-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.sched-line { width: 1px; flex: 1; min-height: 14px; background: var(--border); margin-top: 3px; }
+.sched-item:last-child .sched-line { display: none; }
+.sched-body { flex: 1; }
+.sched-title { font-size: 12px; font-weight: 500; color: var(--text1); margin-bottom: 2px; }
+.sched-meta { font-size: 10px; color: var(--text3); margin-bottom: 4px; font-family: var(--font-mono); }
+.sched-tag { font-size: 9px; padding: 2px 8px; border-radius: 99px; font-weight: 600; }
+
+/* ── Inventory alert ──────────────────────────────────────────── */
+.inv-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.inv-row:last-child { border-bottom: none; }
+.inv-name { font-size: 11px; font-weight: 500; color: var(--text1); flex: 1; }
+.inv-bar-wrap { width: 80px; margin: 0 12px; }
+.inv-bar { height: 4px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+.inv-fill { height: 100%; border-radius: 99px; }
+.inv-qty { font-size: 10px; font-weight: 600; font-family: var(--font-mono); white-space: nowrap; }
+
+/* ── Team member ──────────────────────────────────────────────── */
+.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.team-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 14px;
+  display: flex; align-items: center; gap: 10px;
+  transition: var(--transition);
+}
+.team-card:hover { border-color: var(--border2); background: var(--surface2); }
+.avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+.team-info-name { font-size: 12px; font-weight: 600; color: var(--text1); }
+.team-info-role { font-size: 10px; color: var(--text3); }
+
+/* ── Dept summary ─────────────────────────────────────────────── */
+.dept-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.dept-card {
+  border-radius: var(--r-md);
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  transition: var(--transition);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+.dept-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.dept-card:hover { transform: translateY(-2px); }
+.dept-card.eng  { background: #0D2416; border-color: #22D3A020; }
+.dept-card.eng::before  { background: linear-gradient(90deg,var(--green),transparent); }
+.dept-card.sales{ background: #0D1B2E; border-color: #4E9FFF20; }
+.dept-card.sales::before{ background: linear-gradient(90deg,var(--blue),transparent); }
+.dept-card.fin  { background: #2A1B00; border-color: #F5A62320; }
+.dept-card.fin::before  { background: linear-gradient(90deg,var(--gold),transparent); }
+.dept-card.hr   { background: #1C0D2E; border-color: #B48EFF20; }
+.dept-card.hr::before   { background: linear-gradient(90deg,var(--purple),transparent); }
+.dept-icon-big { font-size: 18px; margin-bottom: 8px; }
+.dept-title {
+  font-family: var(--font-display);
+  font-size: 12px; font-weight: 600;
+  margin-bottom: 6px;
+}
+.dept-card.eng .dept-title  { color: var(--green); }
+.dept-card.sales .dept-title{ color: var(--blue); }
+.dept-card.fin .dept-title  { color: var(--gold); }
+.dept-card.hr .dept-title   { color: var(--purple); }
+.dept-detail { font-size: 10px; color: var(--text3); line-height: 1.6; }
+
+/* ── To-do list ───────────────────────────────────────────────── */
+.todo-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: var(--transition);
+}
+.todo-item:last-child { border-bottom: none; padding-bottom: 0; }
+.todo-item:hover { padding-left: 4px; }
+.todo-check {
+  width: 16px; height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid var(--border2);
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+  font-size: 9px;
+}
+.todo-check.done { background: var(--green); border-color: var(--green); color: var(--bg); }
+.todo-text { flex: 1; font-size: 11px; color: var(--text2); }
+.todo-text.done { text-decoration: line-through; color: var(--text3); }
+.todo-tag { font-size: 9px; padding: 2px 7px; border-radius: 99px; font-weight: 600; white-space: nowrap; }
+
+/* ── Quick actions ────────────────────────────────────────────── */
+.qa-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+.qa-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 12px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition);
+}
+.qa-btn:hover { background: var(--surface2); border-color: var(--border2); transform: translateY(-2px); box-shadow: 0 8px 20px #00000040; }
+.qa-icon { font-size: 18px; margin-bottom: 5px; }
+.qa-label { font-size: 11px; font-weight: 500; color: var(--text1); }
+.qa-sub { font-size: 10px; color: var(--text3); margin-top: 1px; }
+
+/* ── Section label ────────────────────────────────────────────── */
+.section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ── Footer ───────────────────────────────────────────────────── */
+.footer {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 16px 24px;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.footer-left { font-size: 11px; color: var(--text3); }
+.footer-left span { color: var(--gold); }
+.footer-right { display: flex; gap: 12px; align-items: center; }
+.footer-stat { font-size: 10px; color: var(--text3); display: flex; align-items: center; gap: 4px; }
+.footer-stat strong { color: var(--text2); }
+
+/* ── Animations on load ───────────────────────────────────────── */
+.fade-up {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: fadeUp 0.5s ease forwards;
+}
+@keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
+.delay-6 { animation-delay: 0.3s; }
+.delay-7 { animation-delay: 0.35s; }
+.delay-8 { animation-delay: 0.4s; }
+
+/* ── Scrollbar ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 3px; }
+</style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+<div class="orb orb-3"></div>
+
+<div class="dashboard">
+
+  <!-- ── HEADER ─────────────────────────────────────────────── -->
+  <div class="header fade-up">
+    <div class="header-left">
+      <div class="logo">☀️</div>
+      <div>
+        <div class="brand-name">Gleenergy Solar Solutions</div>
+        <div class="brand-sub">Hello Solar ERP System — Admin Control Panel</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="live-badge"><div class="pulse"></div>Live Data</div>
+      <div class="date-display" id="header-date"></div>
+    </div>
+  </div>
+
+  <!-- ── CLOCK STRIP ─────────────────────────────────────────── -->
+  <div class="clock-strip fade-up delay-1">
+    <div>
+      <div class="clock-time" id="clock-time">--:--:-- --</div>
+    </div>
+    <div class="clock-meta">
+      <div class="clock-greeting" id="clock-greeting">Good morning, Team! ☀️</div>
+      <div class="clock-day" id="clock-day">--</div>
+      <div class="clock-manila">🇵🇭 Asia/Manila · UTC+8</div>
+    </div>
+  </div>
+
+  <!-- ── NAVIGATION ──────────────────────────────────────────── -->
+  <div class="nav-pills fade-up delay-2">
+    <div class="nav-pill active"><span class="nav-pill-icon">📊</span> Dashboard</div>
+    <div class="nav-pill"><span class="nav-pill-icon">📋</span> CRM Leads</div>
+    <div class="nav-pill"><span class="nav-pill-icon">📁</span> Projects</div>
+    <div class="nav-pill"><span class="nav-pill-icon">💰</span> Finance</div>
+    <div class="nav-pill"><span class="nav-pill-icon">👥</span> HR & Payroll</div>
+    <div class="nav-pill"><span class="nav-pill-icon">🔩</span> BOM</div>
+    <div class="nav-pill"><span class="nav-pill-icon">📦</span> Inventory</div>
+    <div class="nav-pill"><span class="nav-pill-icon">🔧</span> After-Sales</div>
+    <div class="nav-pill"><span class="nav-pill-icon">🗓️</span> Attendance</div>
+    <div class="nav-pill"><span class="nav-pill-icon">💸</span> Commission</div>
+  </div>
+
+  <!-- ── KPI ROW 1 ────────────────────────────────────────────── -->
+  <div class="section-label fade-up delay-2">Live KPI Summary</div>
+  <div class="kpi-grid fade-up delay-2">
+    <div class="kpi-card green">
+      <div class="kpi-icon-wrap">📁</div>
+      <div class="kpi-label">Active Projects</div>
+      <div class="kpi-value">12</div>
+      <div class="kpi-sub up">+3 this month</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon-wrap">📋</div>
+      <div class="kpi-label">Open Leads</div>
+      <div class="kpi-value">28</div>
+      <div class="kpi-sub warn">5 overdue follow-up</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-icon-wrap">💰</div>
+      <div class="kpi-label">Revenue (PHP)</div>
+      <div class="kpi-value">₱4.2M</div>
+      <div class="kpi-sub up">April 2026</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-icon-wrap">🔧</div>
+      <div class="kpi-label">PMS Due</div>
+      <div class="kpi-value">7</div>
+      <div class="kpi-sub down">3 overdue</div>
+    </div>
+  </div>
+
+  <!-- ── KPI ROW 2 ────────────────────────────────────────────── -->
+  <div class="kpi-grid fade-up delay-3">
+    <div class="kpi-card teal">
+      <div class="kpi-icon-wrap">🏆</div>
+      <div class="kpi-label">Won Deals</div>
+      <div class="kpi-value">5</div>
+      <div class="kpi-sub up">closed this month</div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon-wrap">💹</div>
+      <div class="kpi-label">Pipeline Value</div>
+      <div class="kpi-value">₱2.59M</div>
+      <div class="kpi-sub">New + Quoted leads</div>
+    </div>
+    <div class="kpi-card purple">
+      <div class="kpi-icon-wrap">👥</div>
+      <div class="kpi-label">Net Payroll</div>
+      <div class="kpi-value">₱155K</div>
+      <div class="kpi-sub">monthly take-home</div>
+    </div>
+    <div class="kpi-card red">
+      <div class="kpi-icon-wrap">📦</div>
+      <div class="kpi-label">Inventory Alerts</div>
+      <div class="kpi-value">3</div>
+      <div class="kpi-sub down">items to reorder</div>
+    </div>
+  </div>
+
+  <!-- ── QUICK ACTIONS ───────────────────────────────────────── -->
+  <div class="section-label fade-up delay-3">Quick Actions</div>
+  <div class="qa-grid fade-up delay-3">
+    <div class="qa-btn"><div class="qa-icon">📋</div><div class="qa-label">+ New Lead</div><div class="qa-sub">CRM Leads</div></div>
+    <div class="qa-btn"><div class="qa-icon">📁</div><div class="qa-label">+ New Project</div><div class="qa-sub">Projects</div></div>
+    <div class="qa-btn"><div class="qa-icon">✅</div><div class="qa-label">+ New Task</div><div class="qa-sub">Tasks</div></div>
+    <div class="qa-btn"><div class="qa-icon">💰</div><div class="qa-label">+ New Entry</div><div class="qa-sub">Finance</div></div>
+    <div class="qa-btn"><div class="qa-icon">🛒</div><div class="qa-label">+ New PO</div><div class="qa-sub">Purchasing</div></div>
+    <div class="qa-btn"><div class="qa-icon">💸</div><div class="qa-label">+ Commission</div><div class="qa-sub">Sales</div></div>
+    <div class="qa-btn"><div class="qa-icon">🔧</div><div class="qa-label">+ New PMS</div><div class="qa-sub">After-Sales</div></div>
+    <div class="qa-btn"><div class="qa-icon">📅</div><div class="qa-label">+ Schedule</div><div class="qa-sub">Calendar</div></div>
+  </div>
+
+  <!-- ── ALERTS + TO-DO ──────────────────────────────────────── -->
+  <div class="two-col fade-up delay-4">
+    <div class="section-card">
+      <div class="section-hdr">
+        <div class="section-hdr-left">
+          <span class="section-hdr-icon">⚠️</span>
+          <span class="section-hdr-title">Alerts & Reminders</span>
+        </div>
+        <span class="section-hdr-badge" style="background:var(--redGlow);color:var(--red);border-color:var(--red)20">5 active</span>
+      </div>
+      <div class="section-body">
+        <div class="alert-list">
+          <div class="alert-item danger">
+            <div class="alert-dot"></div>
+            <div class="alert-text">3 PMS visits overdue — schedule immediately</div>
+            <span class="alert-badge" style="background:var(--redGlow);color:var(--red)">PMS</span>
+          </div>
+          <div class="alert-item warn">
+            <div class="alert-dot"></div>
+            <div class="alert-text">5 leads past follow-up date</div>
+            <span class="alert-badge" style="background:var(--goldGlow);color:var(--gold)">CRM</span>
+          </div>
+          <div class="alert-item warn">
+            <div class="alert-dot"></div>
+            <div class="alert-text">2 permits expiring in 30 days</div>
+            <span class="alert-badge" style="background:var(--goldGlow);color:var(--gold)">Permits</span>
+          </div>
+          <div class="alert-item danger">
+            <div class="alert-dot"></div>
+            <div class="alert-text">4 inventory items need reorder</div>
+            <span class="alert-badge" style="background:var(--redGlow);color:var(--red)">Stock</span>
+          </div>
+          <div class="alert-item ok">
+            <div class="alert-dot"></div>
+            <div class="alert-text">Payroll cutoff: April 30, 2026</div>
+            <span class="alert-badge" style="background:var(--greenGlow);color:var(--green)">HR</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-hdr">
+        <div class="section-hdr-left">
+          <span class="section-hdr-icon">✅</span>
+          <span class="section-hdr-title">To-Do List</span>
+        </div>
+        <span class="section-hdr-badge" style="background:var(--blueGlow);color:var(--blue);border-color:var(--blue)20">5 items</span>
+      </div>
+      <div class="section-body">
+        <div class="todo-item" onclick="toggleTodo(this)">
+          <div class="todo-check"></div>
+          <div class="todo-text">Follow up Cruz lead — quotation sent</div>
+          <span class="todo-tag" style="background:var(--blueGlow);color:var(--blue)">Sales</span>
+        </div>
+        <div class="todo-item" onclick="toggleTodo(this)">
+          <div class="todo-check"></div>
+          <div class="todo-text">File ECP permit — Reyes project</div>
+          <span class="todo-tag" style="background:var(--goldGlow);color:var(--gold)">Permits</span>
+        </div>
+        <div class="todo-item" onclick="toggleTodo(this)">
+          <div class="todo-check done">✓</div>
+          <div class="todo-text done">Release April 1st payroll</div>
+          <span class="todo-tag" style="background:var(--greenGlow);color:var(--green)">HR</span>
+        </div>
+        <div class="todo-item" onclick="toggleTodo(this)">
+          <div class="todo-check"></div>
+          <div class="todo-text">Order 20 panels — Dela Cruz 10kWp</div>
+          <span class="todo-tag" style="background:var(--purpGlow);color:var(--purple)">Procurement</span>
+        </div>
+        <div class="todo-item" onclick="toggleTodo(this)">
+          <div class="todo-check"></div>
+          <div class="todo-text">Schedule PMS — Santos (Jan install)</div>
+          <span class="todo-tag" style="background:var(--redGlow);color:var(--red)">After-Sales</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PIPELINE ─────────────────────────────────────────────── -->
+  <div class="section-card fade-up delay-5">
+    <div class="section-hdr">
+      <div class="section-hdr-left">
+        <span class="section-hdr-icon">📋</span>
+        <span class="section-hdr-title">Lead Pipeline</span>
+      </div>
+      <span class="section-hdr-badge" style="background:var(--blueGlow);color:var(--blue);border-color:var(--blue)20">29 total leads</span>
+    </div>
+    <div class="section-body">
+      <div class="pipeline">
+        <div class="pipe-col">
+          <div class="pipe-hdr" style="color:var(--blue)">
+            New <span class="pipe-count" style="background:var(--blueGlow);color:var(--blue)">8</span>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Garcia Family</div>
+            <div class="pipe-card-meta">Referral · 8kWp</div>
+            <div class="pipe-card-val">₱280,000</div>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Bautista Res.</div>
+            <div class="pipe-card-meta">Facebook · 6kWp</div>
+            <div class="pipe-card-val">₱210,000</div>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Dela Cruz</div>
+            <div class="pipe-card-meta">Referral · 10kWp</div>
+            <div class="pipe-card-val">₱350,000</div>
+          </div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-hdr" style="color:var(--gold)">
+            Contacted <span class="pipe-count" style="background:var(--goldGlow);color:var(--gold)">6</span>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Lim Commercial</div>
+            <div class="pipe-card-meta">Walk-in · 20kWp</div>
+            <div class="pipe-card-val">₱700,000</div>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Villanueva</div>
+            <div class="pipe-card-meta">Website · 5kWp</div>
+            <div class="pipe-card-val">₱175,000</div>
+          </div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-hdr" style="color:var(--purple)">
+            Quoted <span class="pipe-count" style="background:var(--purpGlow);color:var(--purple)">7</span>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Cruz Residence</div>
+            <div class="pipe-card-meta">Website · 10kWp</div>
+            <div class="pipe-card-val">₱350,000</div>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Mendoza Corp.</div>
+            <div class="pipe-card-meta">Website · 15kWp</div>
+            <div class="pipe-card-val">₱525,000</div>
+          </div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-hdr" style="color:var(--green)">
+            Won <span class="pipe-count" style="background:var(--greenGlow);color:var(--green)">5</span>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Reyes Family</div>
+            <div class="pipe-card-meta">Referral · 8kWp</div>
+            <div class="pipe-card-val">₱280,000</div>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Santos HOA</div>
+            <div class="pipe-card-meta">Facebook · 12kWp</div>
+            <div class="pipe-card-val">₱420,000</div>
+          </div>
+        </div>
+        <div class="pipe-col">
+          <div class="pipe-hdr" style="color:var(--red)">
+            Lost <span class="pipe-count" style="background:var(--redGlow);color:var(--red)">3</span>
+          </div>
+          <div class="pipe-card">
+            <div class="pipe-card-name">Aquino Res.</div>
+            <div class="pipe-card-meta">Walk-in · 8kWp</div>
+            <div class="pipe-card-val">₱245,000</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── PROJECTS + SCHEDULE ─────────────────────────────────── -->
+  <div class="two-col fade-up delay-5">
+    <div class="section-card">
+      <div class="section-hdr">
+        <div class="section-hdr-left">
+          <span class="section-hdr-icon">📁</span>
+          <span class="section-hdr-title">Active Projects</span>
+        </div>
+        <span class="section-hdr-badge" style="background:var(--greenGlow);color:var(--green);border-color:var(--green)20">3 active</span>
+      </div>
+      <div class="section-body">
+        <div class="project-row">
+          <div class="project-top">
+            <div class="project-name">Cruz – 10kWp Solar</div>
+            <div class="project-value">₱350,000</div>
+          </div>
+          <div class="project-meta">PM: Juan dela Cruz · Target: May 15, 2026</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:65%;background:linear-gradient(90deg,var(--blue),var(--teal))"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="progress-pct">65% complete</div>
+            <span class="status-badge" style="background:var(--blueGlow);color:var(--blue)">Installation</span>
+          </div>
+        </div>
+        <div class="project-row">
+          <div class="project-top">
+            <div class="project-name">Reyes – 8kWp Solar</div>
+            <div class="project-value">₱280,000</div>
+          </div>
+          <div class="project-meta">PM: Maria Santos · Target: May 30, 2026</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:30%;background:linear-gradient(90deg,var(--gold),#FF8C00)"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="progress-pct">30% complete</div>
+            <span class="status-badge" style="background:var(--goldGlow);color:var(--gold)">Procurement</span>
+          </div>
+        </div>
+        <div class="project-row">
+          <div class="project-top">
+            <div class="project-name">Santos HOA – 12kWp</div>
+            <div class="project-value">₱420,000</div>
+          </div>
+          <div class="project-meta">PM: Pedro Reyes · Target: Jun 10, 2026</div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:15%;background:linear-gradient(90deg,var(--purple),var(--blue))"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div class="progress-pct">15% complete</div>
+            <span class="status-badge" style="background:var(--purpGlow);color:var(--purple)">Planning</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-hdr">
+        <div class="section-hdr-left">
+          <span class="section-hdr-icon">📅</span>
+          <span class="section-hdr-title">This Week's Schedule</span>
+        </div>
+        <span class="section-hdr-badge" style="background:var(--tealGlow);color:var(--teal);border-color:var(--teal)20">5 events</span>
+      </div>
+      <div class="section-body">
+        <div class="sched-list">
+          <div class="sched-item">
+            <div class="sched-dot-col">
+              <div class="sched-dot" style="background:var(--blue);box-shadow:0 0 6px var(--blue)"></div>
+              <div class="sched-line"></div>
+            </div>
+            <div class="sched-body">
+              <div class="sched-title">Site Visit — Garcia Family</div>
+              <div class="sched-meta">Mon Apr 28 · 9:00 AM · Malabon</div>
+              <span class="sched-tag" style="background:var(--blueGlow);color:var(--blue)">Site Visit</span>
+            </div>
+          </div>
+          <div class="sched-item">
+            <div class="sched-dot-col">
+              <div class="sched-dot" style="background:var(--purple);box-shadow:0 0 6px var(--purple)"></div>
+              <div class="sched-line"></div>
+            </div>
+            <div class="sched-body">
+              <div class="sched-title">Installation Day — Cruz 10kWp</div>
+              <div class="sched-meta">Tue Apr 29 · 7:00 AM · Caloocan</div>
+              <span class="sched-tag" style="background:var(--purpGlow);color:var(--purple)">Installation</span>
+            </div>
+          </div>
+          <div class="sched-item">
+            <div class="sched-dot-col">
+              <div class="sched-dot" style="background:var(--gold);box-shadow:0 0 6px var(--gold)"></div>
+              <div class="sched-line"></div>
+            </div>
+            <div class="sched-body">
+              <div class="sched-title">Client Meeting — Mendoza Corp.</div>
+              <div class="sched-meta">Wed Apr 30 · 2:00 PM · Online</div>
+              <span class="sched-tag" style="background:var(--goldGlow);color:var(--gold)">Meeting</span>
+            </div>
+          </div>
+          <div class="sched-item">
+            <div class="sched-dot-col">
+              <div class="sched-dot" style="background:var(--red);box-shadow:0 0 6px var(--red)"></div>
+              <div class="sched-line"></div>
+            </div>
+            <div class="sched-body">
+              <div class="sched-title">PMS Visit — Santos HOA</div>
+              <div class="sched-meta">Thu May 1 · 8:00 AM · Quezon City</div>
+              <span class="sched-tag" style="background:var(--redGlow);color:var(--red)">PMS</span>
+            </div>
+          </div>
+          <div class="sched-item">
+            <div class="sched-dot-col">
+              <div class="sched-dot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></div>
+              <div class="sched-line"></div>
+            </div>
+            <div class="sched-body">
+              <div class="sched-title">Permit Filing — Reyes ECP</div>
+              <div class="sched-meta">Fri May 2 · 10:00 AM · LGU Office</div>
+              <span class="sched-tag" style="background:var(--greenGlow);color:var(--green)">Permits</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DEPT SUMMARY ─────────────────────────────────────────── -->
+  <div class="section-label fade-up delay-6">Department Summary</div>
+  <div class="dept-grid fade-up delay-6">
+    <div class="dept-card eng">
+      <div class="dept-icon-big">⚙️</div>
+      <div class="dept-title">Engineering</div>
+      <div class="dept-detail">12 active projects · 8 tasks due this week · 2 permits pending release</div>
+    </div>
+    <div class="dept-card sales">
+      <div class="dept-icon-big">📊</div>
+      <div class="dept-title">Sales</div>
+      <div class="dept-detail">28 open leads · ₱2.1M pipeline · 3 site visits this week</div>
+    </div>
+    <div class="dept-card fin">
+      <div class="dept-icon-big">💰</div>
+      <div class="dept-title">Finance</div>
+      <div class="dept-detail">₱3.47M revenue YTD · ₱1.24M expenses · 5 reimbursements pending</div>
+    </div>
+    <div class="dept-card hr">
+      <div class="dept-icon-big">👥</div>
+      <div class="dept-title">HR & Admin</div>
+      <div class="dept-detail">6 active employees · Payroll cutoff Apr 30 · 0 absent today</div>
+    </div>
+  </div>
+
+  <!-- ── TEAM + INVENTORY ─────────────────────────────────────── -->
+  <div class="two-col fade-up delay-7">
+    <div class="section-card">
+      <div class="section-hdr">
+        <div class="section-hdr-left">
+          <span class="section-hdr-icon">👤</span>
+          <span class="section-hdr-title">Team Members</span>
+        </div>
+        <span class="section-hdr-badge" style="background:var(--purpGlow);color:var(--purple);border-color:var(--purple)20">6 active</span>
+      </div>
+      <div class="section-body">
+        <div class="team-grid">
+          <div class="team-card">
+            <div class="avatar" style="background:#0D1B2E;color:var(--blue)">DS</div>
+            <div><div class="team-info-name">Danilo S.</div><div class="team-info-role">Technician</div></div>
+          </div>
+          <div class="team-card">
+            <div class="avatar" style="background:#0D2416;color:var(--green)">JC</div>
+            <div><div class="team-info-name">Juan C.</div><div class="team-info-role">Electrician</div></div>
+          </div>
+          <div class="team-card">
+            <div class="avatar" style="background:#2A1B00;color:var(--gold)">MS</div>
+            <div><div class="team-info-name">Maria S.</div><div class="team-info-role">PM</div></div>
+          </div>
+          <div class="team-card">
+            <div class="avatar" style="background:#200D0D;color:var(--red)">PR</div>
+            <div><div class="team-info-name">Pedro R.</div><div class="team-info-role">Sales</div></div>
+          </div>
+          <div class="team-card">
+            <div class="avatar" style="background:#1C0D2E;color:var(--purple)">SC</div>
+            <div><div class="team-info-name">Serafin C.</div><div class="team-info-role">Marketing</div></div>
+          </div>
+          <div class="team-card">
+            <div class="avatar" style="background:#0D1F2E;color:var(--teal)">AL</div>
+            <div><div class="team-info-name">Ana L.</div><div class="team-info-role">Admin</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-hdr">
+        <div class="section-hdr-left">
+          <span class="section-hdr-icon">📦</span>
+          <span class="section-hdr-title">Inventory Alerts</span>
+        </div>
+        <span class="section-hdr-badge" style="background:var(--redGlow);color:var(--red);border-color:var(--red)20">3 critical</span>
+      </div>
+      <div class="section-body">
+        <div class="inv-row">
+          <div class="inv-name">550W Mono Panel</div>
+          <div class="inv-bar-wrap"><div class="inv-bar"><div class="inv-fill" style="width:20%;background:var(--red)"></div></div></div>
+          <div class="inv-qty" style="color:var(--red)">2 pcs left</div>
+        </div>
+        <div class="inv-row">
+          <div class="inv-name">DC Cable 6mm²</div>
+          <div class="inv-bar-wrap"><div class="inv-bar"><div class="inv-fill" style="width:30%;background:var(--gold)"></div></div></div>
+          <div class="inv-qty" style="color:var(--gold)">15m left</div>
+        </div>
+        <div class="inv-row">
+          <div class="inv-name">Growatt 10kW Inverter</div>
+          <div class="inv-bar-wrap"><div class="inv-bar"><div class="inv-fill" style="width:60%;background:var(--gold)"></div></div></div>
+          <div class="inv-qty" style="color:var(--gold)">4 units</div>
+        </div>
+        <div class="inv-row">
+          <div class="inv-name">Mounting Rails 3m</div>
+          <div class="inv-bar-wrap"><div class="inv-bar"><div class="inv-fill" style="width:40%;background:var(--gold)"></div></div></div>
+          <div class="inv-qty" style="color:var(--gold)">8 pcs left</div>
+        </div>
+        <div class="inv-row">
+          <div class="inv-name">MC4 Connectors</div>
+          <div class="inv-bar-wrap"><div class="inv-bar"><div class="inv-fill" style="width:80%;background:var(--green)"></div></div></div>
+          <div class="inv-qty" style="color:var(--green)">62 pairs ✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ───────────────────────────────────────────────── -->
+  <div class="footer fade-up delay-8">
+    <div class="footer-left">☀️ <span>Gleenergy Solar ERP</span> · Built with Notion · All data live</div>
+    <div class="footer-right">
+      <div class="footer-stat"><div class="pulse" style="width:5px;height:5px"></div><strong>9</strong> databases</div>
+      <div class="footer-stat"><strong>130+</strong> properties</div>
+      <div class="footer-stat"><strong>45+</strong> formulas</div>
+      <div class="footer-stat" id="footer-time"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Live Clock ──────────────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const manilaOpts = { timeZone: 'Asia/Manila' };
+  const time = now.toLocaleTimeString('en-PH', { ...manilaOpts, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const day  = now.toLocaleDateString('en-PH', { ...manilaOpts, weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const hr   = parseInt(now.toLocaleString('en', { ...manilaOpts, hour: 'numeric', hour12: false }));
+  const greeting = hr < 5 ? 'Good evening' : hr < 12 ? 'Good morning' : hr < 17 ? 'Good afternoon' : 'Good evening';
+  const icon = hr < 5 ? '🌙' : hr < 12 ? '☀️' : hr < 17 ? '🌤️' : '🌙';
+
+  const clockEl = document.getElementById('clock-time');
+  const greetEl = document.getElementById('clock-greeting');
+  const dayEl   = document.getElementById('clock-day');
+  const hdrEl   = document.getElementById('header-date');
+  const ftEl    = document.getElementById('footer-time');
+
+  if (clockEl) clockEl.textContent = time;
+  if (greetEl) greetEl.textContent = `${greeting}, Team! ${icon}`;
+  if (dayEl)   dayEl.textContent   = day;
+  if (hdrEl)   hdrEl.innerHTML     = `<span class="date-highlight">${day}</span>`;
+  if (ftEl)    ftEl.innerHTML      = `Last updated: <strong>${time}</strong>`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── To-do toggle ────────────────────────────────────────────────
+function toggleTodo(item) {
+  const check = item.querySelector('.todo-check');
+  const text  = item.querySelector('.todo-text');
+  if (check.classList.contains('done')) {
+    check.classList.remove('done');
+    check.textContent = '';
+    text.classList.remove('done');
+  } else {
+    check.classList.add('done');
+    check.textContent = '✓';
+    text.classList.add('done');
+  }
+}
+
+// ── Nav pill click ──────────────────────────────────────────────
+document.querySelectorAll('.nav-pill').forEach(p => {
+  p.addEventListener('click', function() {
+    document.querySelectorAll('.nav-pill').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>
